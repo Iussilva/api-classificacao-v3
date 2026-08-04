@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ourobras — Central de Gestão</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-solid-rounded/css/uicons-solid-rounded.css">
+  <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-regular-rounded/css/uicons-regular-rounded.css">
+  <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-thin-rounded/css/uicons-thin-rounded.css">
+  <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-thin-straight/css/uicons-thin-straight.css">
+<link rel="stylesheet" href="/style.css" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-thin-straight/css/uicons-thin-straight.css">
+
+</head>
+
+<body class="auth-loading">
+
+  <!-- ══════════════════════════════════════════════
+     TOPBAR UNIFICADA
+══════════════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="brand">
+      <img src="/img/logo.jpg" alt="Ourobras" class="brand-logo-full">
+    </div>
+
+    <nav class="tabs-nav">
+      <button class="tab-btn active" data-tab="estoque" id="tabBtnEstoque">
+        <span class="tab-icon"><i class="fi fi-sr-box-open-full"></i></span>
+        Estoque
+      </button>
+      <button class="tab-btn" data-tab="vendas" id="tabBtnVendas">
+        <span class="tab-icon"><i class="fi fi-rr-chat-arrow-grow"></i></span>
+        Vendas
+      </button>
+      <button class="tab-btn" data-tab="auditoria" id="tabBtnAuditoria">
+        <span class="tab-icon"><i class="fi fi-rr-search-alt"></i></span>
+        Auditoria
+      </button>
+      <button class="tab-btn" data-tab="consultas" id="tabBtnConsultas">
+        <span class="tab-icon"><i class="fi fi-rr-document-signed"></i></span>
+        Consultas ERP
+      </button>
+      <button class="tab-btn" data-tab="marketing" id="tabBtnMarketing">
+        <span class="tab-icon"><i class="fi fi-rr-users-alt"></i></span>
+        Marketing
+      </button>
+      <button class="tab-btn" data-tab="admin" id="tabBtnAdmin">
+        <span class="tab-icon"><i class="fi fi-rr-settings-sliders"></i></span>
+        Admin
+      </button>
+    </nav>
+
+    <div class="topbar-right">
+      <span class="hora-txt" id="hora">--:--:--</span>
+      <div class="status-badge" id="statusBadge">
+        <span class="status-dot"></span>
+        Verificando...
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════
+     ABA ESTOQUE
+══════════════════════════════════════════════ -->
+  <div class="tab-panel active" id="panel-estoque">
+    <main class="estoque-main">
+
+      <!-- FILTROS -->
+      <div class="filtros-card">
+        <div class="filtros-header">
+          <div class="chart-title" style="display:flex; align-items:center; gap:6px;">
+            <img src="/img/lupa.svg" alt="Local" width="18" height="18">
+            <span>Filtros - Estoque Atual</span>
+          </div>
+        </div>
+        <div class="aviso-info" id="avisoFiltro">
+          Selecione uma <strong>loja</strong> ou <strong>fabricante</strong> e clique em Consultar para visualizar os
+          dados.
+        </div>
+        <div class="filtros-row">
+          <div class="field">
+            <label>Estabelecimento</label>
+            <select id="selLoja">
+              <option value="">— Todas as lojas —</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Fabricante</label>
+            <select id="selFabricante">
+              <option value="">— Todos os fabricantes —</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Coordenador</label>
+            <select id="selCoord">
+              <option value="">— Todos —</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Teor</label>
+            <select id="selTeor">
+              <option value="">Todos</option>
+              <option value="10k">10k</option>
+              <option value="18k">18k</option>
+            </select>
+          </div>
+          <button class="btn-primary" id="btnConsultarEstoque">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            Consultar
+          </button>
+          <!-- <button class="btn-secondary" title="Limpar cache e recarregar">↺ Atualizar
+            cache</button> -->
+        </div>
+      </div>
+
+      <!-- DATA REF -->
+      <div class="data-ref-bar">
+        Estoque em: <strong id="kpiDataRef">carregando...</strong>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid-6">
+        <div class="kpi-card c-blue">
+          <div class="kpi-label">Total em Estoque</div>
+          <div class="kpi-valor" id="kpiTotal">—</div>
+          <div class="kpi-sub" id="kpiTotalSub">saldo em gramas</div>
+        </div>
+        <div class="kpi-card c-green">
+          <div class="kpi-label">Itens Distintos</div>
+          <div class="kpi-valor" id="kpiItens">—</div>
+          <div class="kpi-sub">produtos com saldo</div>
+        </div>
+        <div class="kpi-card c-gold">
+          <div class="kpi-label">Fabricantes</div>
+          <div class="kpi-valor" id="kpiFabricantes">—</div>
+          <div class="kpi-sub">com saldo em estoque</div>
+        </div>
+        <div class="kpi-card c-purple">
+          <div class="kpi-label">Lojas Ativas</div>
+          <div class="kpi-valor" id="kpiLojas">—</div>
+          <div class="kpi-sub">com estoque positivo</div>
+        </div>
+        <div class="kpi-card c-teal">
+          <div class="kpi-label">Maior Estoque</div>
+          <div class="kpi-valor" id="kpiMaiorFab" style="font-size:1.05rem;margin-top:4px">—</div>
+          <div class="kpi-sub" id="kpiMaiorFabSub"></div>
+        </div>
+        <div class="kpi-card c-rose">
+          <div class="kpi-label">Maior Loja</div>
+          <div class="kpi-valor" id="kpiMaiorLoja" style="font-size:1.05rem;margin-top:4px">—</div>
+          <div class="kpi-sub" id="kpiMaiorLojaSub"></div>
+        </div>
+      </div>
+
+      <!-- RESUMO IA -->
+      <div id="resumoIA">
+        <button class="ia-close" id="btnResumoIAClose">✕</button>
+        <div class="ia-badge">🤖 MIDAS · Análise Automática</div>
+        <div class="ia-text" id="resumoIATexto">Gerando análise...</div>
+      </div>
+
+      <!-- GRÁFICOS LINHA 1 -->
+      <div class="charts-row cols-2">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title" style="display:flex; align-items:center; gap:6px;">
+              <img src="/img/box.svg" alt="Local" width="18" height="18">
+              <span>Estoque por Loja</span>
+            </div>
+            <div class="chart-sub">Saldo total em gramas por fabricante</div>
+          </div>
+          <div class="chart-wrap"><canvas id="chartFabricante"></canvas></div>
+        </div>
+        <div class="chart-card" id="cardLoja">
+          <div class="chart-header">
+            <div class="chart-title" style="display:flex; align-items:center; gap:6px;">
+              <img src="/img/local.svg" alt="Local" width="18" height="18">
+              <span>Estoque por Loja</span>
+            </div>
+            <div class="chart-sub">Saldo total por estabelecimento</div>
+          </div>
+          <div class="chart-wrap" id="wrapLoja"><canvas id="chartLoja"></canvas></div>
+        </div>
+      </div>
+
+      <!-- GRÁFICOS LINHA 2 -->
+      <div class="charts-row cols-2">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title"><img src="/img/chart.svg" width="18"
+                style="vertical-align:middle; margin-right:6px;"> Ranking Fabricantes</div>
+            <div class="chart-sub">% do saldo em gramas</div>
+          </div>
+          <div class="chart-wrap"><canvas id="chartPizza"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">
+              <img src="/img/rank.svg" width="18" style="vertical-align:middle; margin-right:6px;"> Ranking Fabricantes
+            </div>
+            <div class="chart-sub">Por saldo em estoque</div>
+          </div>
+          <div id="rankingFab" class="table-wrap">
+            <div class="loader">
+              <div class="spinner"></div><br>Aguardando consulta...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRODUTOS POR FABRICANTE -->
+      <div class="chart-card" style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div>
+            <div class="chart-title" style="display:flex; align-items:center; gap:6px;">
+              <img src="/img/search.svg" alt="Local" width="18" height="18">
+              <span>Produtos em Estoque por Fabricante</span>
+            </div>
+            <div class="chart-sub">Clique no fabricante para expandir os produtos</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" id="filtroProduto" placeholder=" Filtrar produto..."
+              style="padding:8px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:.85rem;font-family:inherit;color:var(--text-1);width:220px;outline:none" />
+            <button id="btnVerProdutos" class="btn-primary">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              Ver Produtos
+            </button>
+          </div>
+        </div>
+        <div id="countProdutos" style="font-size:.78rem;color:var(--text-3);margin-bottom:10px"></div>
+        <div id="produtosArea" style="display:none">
+          <div id="produtosConteudo">
+            <div class="loader">Clique em <strong>Ver Produtos</strong> para carregar.</div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div><!-- /panel-estoque -->
+
+  <!-- ══════════════════════════════════════════════
+     ABA VENDAS
+══════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-vendas">
+    <div class="vendas-layout">
+
+      <!-- SIDEBAR VENDAS -->
+      <aside class="vendas-sidebar">
+
+        <div>
+          <div class="sidebar-section-title">Período</div>
+          <div class="form-group-v">
+            <label>Data Início</label>
+            <input type="date" id="vDataInicio" />
+            <label style="margin-top:6px">Data Fim</label>
+            <input type="date" id="vDataFim" />
+          </div>
+        </div>
+
+        <div>
+          <div class="sidebar-section-title">Fabricante</div>
+          <div class="form-group-v">
+            <select id="vFabricante">
+              <option value="">Todos os fabricantes</option>
+              <option value="SG METAIS LTDA">SG Metais</option>
+              <option value="MANTOVANI JOIAS LTDA.">Mantovani</option>
+              <option value="ELLOS GOLD INDUSTRIA E COMERCIO LTDA">Ellos Gold</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <div class="sidebar-section-title">Loja Específica</div>
+          <div class="form-group-v">
+            <select id="vLoja">
+              <option value="">Todas as lojas</option>
+              <option value="1">1 — Barra</option>
+              <option value="3">3 — Marabá</option>
+              <option value="4">4 — Imperatriz</option>
+              <option value="5">5 — Natal</option>
+              <option value="6">6 — Itaigara</option>
+              <option value="8">8 — João Pessoa</option>
+              <option value="9">9 — Fortaleza</option>
+              <option value="10">10 — Aracaju</option>
+              <option value="12">12 — São Luís/Tropical</option>
+              <option value="13">13 — Avenida 7</option>
+              <option value="15">15 — Belém</option>
+              <option value="16">16 — FSA</option>
+              <option value="17">17 — Maceió</option>
+              <option value="18">18 — Recife</option>
+              <option value="19">19 — São Luís/Centro</option>
+              <option value="20">20 — São Luís/Cohab</option>
+              <option value="23">23 — FSA/Getúlio</option>
+              <option value="25">25 — Goiânia</option>
+              <option value="28">28 — Vila Conceição</option>
+              <option value="30">30 — Vila Mariana</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <div class="sidebar-section-title">Coordenador</div>
+          <div class="coord-pills-v">
+            <button class="coord-pill" data-coord="Bruno">
+              <span class="coord-dot bruno"></span>
+              <div>
+                <div class="coord-name">Bruno</div>
+                <div class="coord-sub">Natal · João Pessoa · Fortaleza · Recife · Maceió</div>
+              </div>
+            </button>
+            <button class="coord-pill" data-coord="Gabriel">
+              <span class="coord-dot gabriel"></span>
+              <div>
+                <div class="coord-name">Gabriel</div>
+                <div class="coord-sub">São Luís (3 lojas) · Marabá · Imperatriz · Belém</div>
+              </div>
+            </button>
+            <button class="coord-pill" data-coord="Raiane">
+              <span class="coord-dot raiane"></span>
+              <div>
+                <div class="coord-name">Raiane</div>
+                <div class="coord-sub">FSA/Getúlio · Barra · Itaigara · Aracaju · Goiânia · Feira · Avenida 7</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <button class="btn-gold" id="btnBuscarV"
+          style="margin-top:4px; background:var(--accent); color:#fff;">
+          Consultar Vendas
+        </button>
+        <button class="btn-secondary" id="btnLimparVendas">✕ Limpar filtros</button>
+
+      </aside>
+
+      <!-- CONTENT VENDAS -->
+      <div class="vendas-content" id="vendasContent">
+        <div class="vendas-empty" id="vendasEmpty">
+          <div class="vendas-empty-icon"><i class="fi fi-rr-chat-arrow-grow"></i></div>
+          <div class="vendas-empty-title">Nenhuma consulta realizada</div>
+          <div class="vendas-empty-sub">Selecione o período e clique em Consultar Vendas</div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /panel-vendas -->
+
+
+  <!-- ══════════════════════════════════════════════
+     ABA AUDITORIA
+══════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-auditoria">
+    <main class="estoque-main">
+
+      <div class="filtros-card">
+        <div class="filtros-header">
+          <div class="chart-title" style="display:flex; align-items:center; gap:6px;">
+            <img src="/img/search.svg" alt="Auditoria" width="18" height="18">
+            <span>Auditoria — Estoque por Grade / Código de Barras</span>
+          </div>
+        </div>
+
+        <div class="filtros-row">
+          <div class="field">
+            <label>Origem / Banco</label>
+            <select id="aOrigem">
+              <option value="matriz">Ourobras Matriz</option>
+              <option value="manaus">Ourobras Manaus</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Loja</label>
+            <select id="aLoja">
+              <option value="1">1 — Barra</option>
+              <option value="3">3 — Marabá</option>
+              <option value="4">4 — Imperatriz</option>
+              <option value="5">5 — Natal</option>
+              <option value="6">6 — Itaigara</option>
+              <option value="8">8 — João Pessoa</option>
+              <option value="9">9 — Fortaleza</option>
+              <option value="10">10 — Aracaju</option>
+              <option value="12">12 — São Luís/Tropical</option>
+              <option value="13">13 — Avenida 7</option>
+              <option value="15">15 — Belém</option>
+              <option value="16">16 — FSA</option>
+              <option value="17">17 — Maceió</option>
+              <option value="18">18 — Recife</option>
+              <option value="19">19 — São Luís/Centro</option>
+              <option value="20">20 — São Luís/Cohab</option>
+              <option value="23">23 — FSA/Getúlio</option>
+              <option value="25">25 — Goiânia</option>
+              <option value="28">28 — Vila Conceição</option>
+              <option value="30">30 — Vila Mariana</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Data Estoque</label>
+            <input type="date" id="aData">
+          </div>
+
+          <button class="btn-primary" id="btnBuscarAuditoria">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            Consultar relatório
+          </button>
+        </div>
+      </div>
+
+      <div class="kpi-grid-4" style="margin-bottom:20px">
+        <div class="v-kpi">
+          <div class="v-kpi-label">Itens Encontrados</div>
+          <div class="v-kpi-valor" id="aKpiItens">—</div>
+          <div class="v-kpi-sub">com saldo positivo</div>
+        </div>
+        <div class="v-kpi">
+          <div class="v-kpi-label">Saldo Total</div>
+          <div class="v-kpi-valor" id="aKpiSaldo">—</div>
+          <div class="v-kpi-sub">gramas</div>
+        </div>
+        <div class="v-kpi">
+          <div class="v-kpi-label">Valor Total</div>
+          <div class="v-kpi-valor" id="aKpiValor">—</div>
+          <div class="v-kpi-sub">preço de compra</div>
+        </div>
+        <div class="v-kpi">
+          <div class="v-kpi-label">Data Referência</div>
+          <div class="v-kpi-valor" id="aKpiData" style="font-size:1.1rem">—</div>
+          <div class="v-kpi-sub">posição consultada</div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Resultado da Auditoria</div>
+          <div class="chart-sub" id="auditoriaResumo">Aguardando consulta...</div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px">
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+            <div class="field" style="min-width:190px">
+              <label>Tipo do produto</label>
+              <select id="filtroTipoAuditoria">
+                <option value="">Todos os tipos</option>
+              </select>
+            </div>
+            <input type="text" class="v-search" id="filtroAuditoria" placeholder="Filtrar código, barras, produto ou grade..." style="min-width:300px">
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button class="btn-secondary" id="btnExportarAuditoriaExcel">Exportar Excel</button>
+            <button class="btn-secondary" id="btnExportarAuditoriaPDF">Exportar PDF</button>
+          </div>
+        </div>
+
+        <div style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px;background:#fff">
+          <div style="font-size:.76rem;font-weight:700;text-transform:uppercase;color:var(--text-3);letter-spacing:.04em;margin-bottom:8px">Colunas para visualizar/exportar</div>
+          <div id="auditoriaColunas" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:.86rem;color:var(--text-1)">
+            <label><input type="checkbox" class="auditoria-col" value="codigo" checked> Código</label>
+            <label><input type="checkbox" class="auditoria-col" value="codigo_barras" checked> Cód. Barras</label>
+            <label><input type="checkbox" class="auditoria-col" value="produto" checked> Produto</label>
+            <label><input type="checkbox" class="auditoria-col" value="unidade" checked> Un.</label>
+            <label><input type="checkbox" class="auditoria-col" value="grade" checked> Grade</label>
+            <label><input type="checkbox" class="auditoria-col" value="saldo" checked> Saldo</label>
+            <label><input type="checkbox" class="auditoria-col" value="vl_compra" checked> Vl. Compra</label>
+            <label><input type="checkbox" class="auditoria-col" value="total" checked> Total</label>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="dt" id="tabelaAuditoria">
+            <thead id="theadAuditoria">
+              <tr>
+                <th>Código</th>
+                <th>Cód. Barras</th>
+                <th>Produto</th>
+                <th>Un.</th>
+                <th>Grade</th>
+                <th style="text-align:right">Saldo</th>
+                <th style="text-align:right">Vl. Compra</th>
+                <th style="text-align:right">Total</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyAuditoria">
+              <tr><td colspan="8" style="text-align:center;color:var(--text-3)">Clique em Consultar Auditoria.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div><!-- /panel-auditoria -->
+
+
+
+  <!-- ══════════════════════════════════════════════
+     ABA CONSULTAS ERP
+  ══════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-consultas">
+    <main class="estoque-main">
+      <style>
+        .consulta-tipos{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.consulta-tipo-btn{border:1px solid var(--border);background:#fff;padding:9px 14px;border-radius:8px;cursor:pointer;font-weight:700;color:var(--text-2)}.consulta-tipo-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+        .consulta-acoes{display:flex;gap:8px;align-items:center}.btn-ver-detalhes{border:0;background:var(--accent);color:#fff;padding:7px 12px;border-radius:7px;cursor:pointer;font-weight:700}.consulta-modal-backdrop{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:9998;padding:24px;align-items:center;justify-content:center}.consulta-modal-backdrop.open{display:flex}.consulta-modal{background:#fff;width:min(1050px,96vw);max-height:90vh;overflow:auto;border-radius:14px;box-shadow:0 24px 80px rgba(0,0,0,.25)}.consulta-modal-head{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;z-index:2}.consulta-modal-body{padding:20px}.consulta-modal-close{border:0;background:#eee;width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer}.consulta-detalhes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:18px}.consulta-detalhe{border:1px solid var(--border);border-radius:8px;padding:10px}.consulta-detalhe small{display:block;color:var(--text-3);font-weight:700;text-transform:uppercase;font-size:.67rem}.consulta-detalhe strong{display:block;margin-top:4px}.consulta-empty{text-align:center;padding:35px;color:var(--text-3)}
+      </style>
+
+      <div class="filtros-card">
+        <div class="filtros-header"><div class="chart-title">Consultas ERP — Vendas e Contratos</div></div>
+        <div class="consulta-tipos">
+          <button class="consulta-tipo-btn active" data-tipo="contrato_120">Contratos 120 dias</button>
+          <button class="consulta-tipo-btn" data-tipo="contrato_003">Contratos 003 dias</button>
+          <button class="consulta-tipo-btn" data-tipo="contrato_relogio_120">Relógio 120 dias</button>
+          <button class="consulta-tipo-btn" data-tipo="contrato_relogio_003">Relógio 003 dias</button>
+          <button class="consulta-tipo-btn" data-tipo="contrato_upgrade">Contrato Upgrade</button>
+          <button class="consulta-tipo-btn" data-tipo="vendas_vitrine">Vendas Vitrine</button>
+        </div>
+        <div class="filtros-row">
+          <div class="field"><label>Origem / Banco</label><select id="cOrigem"><option value="matriz">Ourobras Matriz</option><option value="manaus">Ourobras Manaus</option></select></div>
+          <div class="field"><label>Loja</label><select id="cLoja"><option value="">Carregando...</option></select></div>
+          <div class="field"><label>Data início</label><input type="date" id="cDataInicio"></div>
+          <div class="field"><label>Data fim</label><input type="date" id="cDataFim"></div>
+          <button class="btn-primary" id="btnBuscarConsultas">Consultar</button>
+        </div>
+      </div>
+
+      <div class="kpi-grid-4" style="margin-bottom:20px">
+        <div class="v-kpi"><div class="v-kpi-label" id="cKpiQtdLabel">Contratos</div><div class="v-kpi-valor" id="cKpiQtd">—</div><div class="v-kpi-sub">registros únicos</div></div>
+        <div class="v-kpi"><div class="v-kpi-label">Itens</div><div class="v-kpi-valor" id="cKpiItens">—</div><div class="v-kpi-sub">linhas de produtos</div></div>
+        <div class="v-kpi"><div class="v-kpi-label">Quantidade total</div><div class="v-kpi-valor" id="cKpiPeso">—</div><div class="v-kpi-sub">soma dos itens</div></div>
+        <div class="v-kpi"><div class="v-kpi-label" id="cKpiValorLabel">Valor total</div><div class="v-kpi-valor" id="cKpiValor">—</div><div class="v-kpi-sub" id="cKpiValorSub">sem duplicar contratos</div></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header"><div class="chart-title" id="cTituloResultado">Contratos 120 dias</div><div class="chart-sub" id="cResumoResultado">Aguardando consulta...</div></div>
+        <div class="table-wrap"><table class="dt"><thead><tr><th>Data</th><th>Nº Contrato</th><th>NF</th><th>Cliente/Fornecedor</th><th>Status</th><th style="text-align:right">Itens</th><th style="text-align:right">Quantidade</th><th style="text-align:right">Total líquido</th><th></th></tr></thead><tbody id="cTbody"><tr><td colspan="9" class="consulta-empty">Selecione os filtros e clique em Consultar.</td></tr></tbody></table></div>
+      </div>
+    </main>
+  </div><!-- /panel-consultas -->
+
+  <!-- ══════════════════════════════════════════════
+     ABA MARKETING — CLIENTES NOVOS
+  ══════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-marketing">
+    <main class="estoque-main">
+      <div class="filtros-card">
+        <div class="filtros-header">
+          <div class="chart-title" style="display:flex;align-items:center;gap:7px">
+            <i class="fi fi-rr-users-alt"></i>
+            <span>Marketing — Clientes Novos</span>
+          </div>
+        </div>
+
+        <div class="aviso-info marketing-aviso">
+          Consulte os clientes cadastrados por período, loja, tipo de grupo e tipo de documento.
+        </div>
+
+        <div class="filtros-row">
+          <div class="field">
+            <label>Origem / Banco</label>
+            <select id="mOrigem">
+              <option value="matriz">Ourobras Matriz</option>
+              <option value="manaus">Ourobras Manaus</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Data início</label>
+            <input type="date" id="mDataInicio">
+          </div>
+
+          <div class="field">
+            <label>Data fim</label>
+            <input type="date" id="mDataFim">
+          </div>
+
+          <div class="field">
+            <label>Loja</label>
+            <select id="mLoja">
+              <option value="">— Todas as lojas —</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Tipo do grupo</label>
+            <select id="mGrupo">
+              <option value="">— Todos os grupos —</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tipo de documento</label>
+            <select id="mTipoDocumento">
+              <option value="">— Todos: CPF e CNPJ —</option>
+              <option value="cpf">Somente CPF</option>
+              <option value="cnpj">Somente CNPJ</option>
+            </select>
+          </div>
+
+          <button class="btn-primary" id="btnBuscarMarketing">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            Consultar
+          </button>
+        </div>
+      </div>
+
+      <div class="kpi-grid-4" style="margin-bottom:20px">
+        <div class="v-kpi"><div class="v-kpi-label">Clientes encontrados</div><div class="v-kpi-valor" id="mKpiTotal">—</div><div class="v-kpi-sub">cadastros no período</div></div>
+        <div class="v-kpi"><div class="v-kpi-label">Com grupo</div><div class="v-kpi-valor" id="mKpiComGrupo">—</div><div class="v-kpi-sub">clientes associados</div></div>
+        <div class="v-kpi"><div class="v-kpi-label">Sem grupo</div><div class="v-kpi-valor" id="mKpiSemGrupo">—</div><div class="v-kpi-sub">clientes não classificados</div></div>
+        <div class="v-kpi"><div class="v-kpi-label">Lojas</div><div class="v-kpi-valor" id="mKpiLojas">—</div><div class="v-kpi-sub">com novos cadastros</div></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Clientes novos</div>
+          <div class="chart-sub" id="mResumoResultado">Selecione os filtros e clique em Consultar.</div>
+        </div>
+        <div class="marketing-table-tools marketing-table-tools-sem-busca">
+          <div class="marketing-export-actions">
+            <button type="button" class="btn-secondary" id="btnExportarMarketingExcel">Exportar Excel</button>
+            <button type="button" class="btn-secondary" id="btnExportarMarketingPDF">Exportar PDF</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="dt">
+            <thead><tr><th>Código</th><th>Cliente</th><th>CPF</th><th>CNPJ</th><th>Data de cadastro</th><th>Cód. loja</th><th>Loja</th><th>Grupo</th></tr></thead>
+            <tbody id="mTbody"><tr><td colspan="8" class="consulta-empty">Nenhuma consulta realizada.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div><!-- /panel-marketing -->
+
+  <!-- ══════════════════════════════════════════════
+     ABA ADMIN — USUÁRIOS E PERMISSÕES
+  ══════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-admin">
+    <main class="estoque-main">
+      <div class="filtros-card">
+        <div class="filtros-header">
+          <div class="chart-title">
+            <i class="fi fi-rr-settings-sliders"></i>
+            <span>Admin — Usuários e Permissões</span>
+          </div>
+        </div>
+
+        <div class="aviso-info admin-aviso">
+          Gerencie usuários da aplicação e libere acesso por aba.
+        </div>
+
+        <div class="admin-form-grid">
+          <div class="field">
+            <label>Usuário</label>
+            <input type="text" id="adminUsuario" placeholder="usuário">
+          </div>
+          <div class="field">
+            <label>Nome</label>
+            <input type="text" id="adminNome" placeholder="nome do colaborador">
+          </div>
+          <div class="field">
+            <label>Senha inicial</label>
+            <input type="text" id="adminSenha" placeholder="mínimo 8 caracteres">
+          </div>
+        </div>
+
+        <div class="admin-permissoes" id="adminPermissoesForm"></div>
+
+        <div class="admin-actions">
+          <button class="btn-primary" id="btnCriarUsuarioAdmin">Criar usuário</button>
+          <button class="btn-secondary" id="btnLimparAdmin">Limpar</button>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="v-table-header">
+          <div>
+            <div class="v-table-title">Usuários cadastrados</div>
+            <div class="v-table-count" id="adminUsuariosCount">0 registros</div>
+          </div>
+          <button class="btn-secondary" id="btnAtualizarAdmin">Atualizar</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="dt admin-table">
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th>Nome</th>
+                <th>Perfil</th>
+                <th>Status</th>
+                <th>Permissões</th>
+                <th style="text-align:right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsuariosTbody">
+              <tr><td colspan="6" style="text-align:center;color:var(--text-3)">Carregando usuários.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="v-table-header">
+          <div>
+            <div class="v-table-title">Logs de auditoria</div>
+            <div class="v-table-count" id="adminLogsCount">últimos eventos</div>
+          </div>
+          <button class="btn-secondary" id="btnAtualizarLogsAdmin">Atualizar</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="dt admin-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Usuário</th>
+                <th>Evento</th>
+                <th>IP</th>
+              </tr>
+            </thead>
+            <tbody id="adminLogsTbody">
+              <tr><td colspan="4" style="text-align:center;color:var(--text-3)">Carregando logs.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div><!-- /panel-admin -->
+
+  <div class="consulta-modal-backdrop" id="consultaModal">
+    <div class="consulta-modal" role="dialog" aria-modal="true" aria-labelledby="consultaModalTitulo">
+      <div class="consulta-modal-head"><strong id="consultaModalTitulo">Detalhes</strong><button class="consulta-modal-close" id="btnFecharModalConsulta">×</button></div>
+      <div class="consulta-modal-body" id="consultaModalBody"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ══════════════════════════════════════════════
+     CHAT IA MIDAS — FLUTUANTE UNIFICADO
+══════════════════════════════════════════════ -->
+  <div id="chatWidget">
+    <div id="chatBox">
+      <div id="chatHead">
+        <div class="chat-avatar">
+          <img src="/img/logo2.png" alt="MIDAS">
+        </div>
+        <div class="chat-head-info">
+          <h3>Chat MIDAS</h3>
+          <span><span class="chat-online-dot"></span> Assistente IA Ouro do Brasil</span>
+        </div>
+        <div class="chat-head-actions">
+          <button class="chat-head-btn" id="btnMinimizarChat" title="Minimizar">—</button>
+          <button class="chat-head-btn" id="btnFecharChat" title="Fechar">✕</button>
+        </div>
+      </div>
+      <div id="chatQuick">
+        <button class="chat-chip" data-question="Qual fabricante tem mais estoque hoje?"><i
+            class="fi fi-sr-box-open-full"></i> Maior
+          estoque</button>
+        <button class="chat-chip" data-question="Qual loja tem mais produtos em vitrine?"><i
+            class="fi fi-sr-shop"></i> Loja
+          destaque</button>
+        <button class="chat-chip" data-question="Faça um resumo executivo do estoque atual"><i
+            class="fi fi-rr-chat-arrow-grow"></i> Resumo
+          geral</button>
+      </div>
+      <div id="chatMsgs">
+        <div class="msg-row">
+          <div class="msg-icon ia-icon">
+            <img src="/img/logo2.png" alt="Logo" style="width:100%; height:100%; object-fit:contain;">
+          </div>
+          <div class="msg ia">Olá, Como posso te ajudar hoje ?</div>
+        </div>
+      </div>
+      <div id="chatFooter">
+        <textarea id="chatInput" placeholder="Pergunte sobre estoque ou vendas..." rows="1"
+          ></textarea>
+        <button id="chatSend">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13" />
+            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <button id="chatBtn" title="Assistente MIDAS">
+      <img src="/img/assets/voice-bot.svg" class="chat-btn-icon" alt="Bot">
+    </button>
+  </div>
+  <script src="/script.js"></script>
+
+
+</body>
+
+</html>
