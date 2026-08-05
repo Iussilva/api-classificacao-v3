@@ -61,6 +61,20 @@ app.get('/api/auth/session', auth.autenticar, auth.session);
 // ════════════════════════════════════════════════════════════
 app.use(auth.autenticar);
 
+function protegerPrefixos(permissoesAceitas, prefixos) {
+  var middleware = auth.exigirPermissao.apply(auth, permissoesAceitas);
+
+  return function (req, res, next) {
+    var caminho = req.path;
+    var deveProteger = prefixos.some(function (prefixo) {
+      return caminho === prefixo || caminho.indexOf(prefixo + '/') === 0;
+    });
+
+    if (!deveProteger) return next();
+    return middleware(req, res, next);
+  };
+}
+
 // ════════════════════════════════════════════════════════════════
 // CONFIGURAÇÃO DO BANCO FIREBIRD
 // ════════════════════════════════════════════════════════════════
@@ -192,7 +206,7 @@ app.use('/api', createSharedRoutes({
   cache: cache
 }));
 
-app.use('/api', auth.exigirPermissao('estoque'), createEstoqueRoutes({
+app.use('/api', protegerPrefixos(['estoque'], ['/estoque']), createEstoqueRoutes({
   query: query,
   comCache: comCache,
   FABRICANTES_IN: FABRICANTES_IN,
@@ -200,32 +214,32 @@ app.use('/api', auth.exigirPermissao('estoque'), createEstoqueRoutes({
   dataHoje: dataHoje
 }));
 
-app.use('/api', auth.exigirPermissao('vendas'), createVendasRoutes({
+app.use('/api', protegerPrefixos(['vendas'], ['/vendas', '/coordenadores']), createVendasRoutes({
   query: query,
   comCache: comCache,
   FABRICANTES_IN: FABRICANTES_IN,
   COORDENADORES: COORDENADORES
 }));
 
-app.use('/api', auth.exigirPermissao('marketing'), createMarketingRoutes({
+app.use('/api', protegerPrefixos(['marketing'], ['/marketing']), createMarketingRoutes({
   query: query,
   normalizarOrigem: normalizarOrigem
 }));
 
-app.use('/api', auth.exigirPermissao('auditoria'), createAuditoriaRoutes({
+app.use('/api', protegerPrefixos(['auditoria'], ['/auditoria']), createAuditoriaRoutes({
   query: query,
   comCache: comCache,
   normalizarOrigem: normalizarOrigem,
   dataHojeISO: dataHojeISO
 }));
 
-app.use('/api', auth.exigirPermissao('consultas_erp'), createConsultasErpRoutes({
+app.use('/api', protegerPrefixos(['consultas_erp'], ['/consultas', '/contratos']), createConsultasErpRoutes({
   query: query,
   comCache: comCache,
   normalizarOrigem: normalizarOrigem
 }));
 
-app.use('/api', auth.exigirPermissao('admin', 'estoque', 'vendas', 'auditoria', 'consultas_erp', 'marketing'), createIaRoutes({
+app.use('/api', protegerPrefixos(['admin', 'estoque', 'vendas', 'auditoria', 'consultas_erp', 'marketing'], ['/ia']), createIaRoutes({
   query: query,
   comCache: comCache,
   FABRICANTES_IN: FABRICANTES_IN,
