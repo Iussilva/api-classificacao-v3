@@ -1,4 +1,4 @@
-// ── Verificação de autenticação ──────────────────────────────
+﻿// ── Verificação de autenticação ──────────────────────────────
 (function () {
   fetch('/api/auth/session', { credentials: 'same-origin' }).then(function (r) {
     if (r.status === 401) {
@@ -128,8 +128,8 @@ var modulosPadrao = [
 configurarCatalogoModulos(modulosPadrao);
 
 var PALETTE = [
-  '#1A3A6B', '#A8762A', '#166534', '#7c3aed',
-  '#0891b2', '#c2410c', '#1E5F8A', '#1A6B45', '#7B3074', '#b45309'
+  '#274A98', '#F5C400', '#22C55E', '#8B5CF6',
+  '#06B6D4', '#EF4444', '#3B82F6', '#10B981', '#F97316', '#64748B'
 ];
 
 function fmt(v, dec) {
@@ -138,12 +138,65 @@ function fmt(v, dec) {
 function nomeFab(n) { return (n || 'Sem Fabricante').trim(); }
 function nomeLoja(n, cod) { return (n || 'Est. ' + cod).trim(); }
 
+function nomeFabCurto(nome) {
+  var n = nomeFab(nome).toUpperCase();
+  if (n.indexOf('OUROBRAS') !== -1) return 'Ourobras';
+  if (n.indexOf('ELLOS') !== -1) return 'Ellos Gold';
+  if (n.indexOf('SG METAIS') !== -1) return 'SG Metais';
+  if (n.indexOf('MANTOVANI') !== -1) return 'Mantovani';
+  return nomeFab(nome).replace(/LTDA.?/ig, '').replace(/INDUSTRIA E COMERCIO/ig, '').trim();
+}
+
+function nomeLojaCurto(nome, cod) {
+  var n = nomeLoja(nome, cod);
+  return n
+    .replace(/^d+s*[?-]s*/g, '')
+    .replace(/^OURO DO BRASILs*-s*/i, '')
+    .replace(/^OUROBRASs*-s*/i, '')
+    .replace(/s+MATRIZ$/i, '')
+    .trim();
+}
+
+function setKpiTexto(idValor, idSub, textoCurto, textoCompleto, sub) {
+  var el = document.getElementById(idValor);
+  if (!el) return;
+  el.textContent = textoCurto || '-';
+  el.title = textoCompleto || textoCurto || '';
+  el.classList.add('kpi-text-fit');
+  var subEl = document.getElementById(idSub);
+  if (subEl) subEl.textContent = sub || '';
+}
+
+
 /* ── RELÓGIO ────────────────────────────────── */
 setInterval(function () {
   var el = document.getElementById('hora');
   if (el) el.textContent = new Date().toLocaleTimeString('pt-BR');
 }, 1000);
 
+
+function aplicarTema(tema) {
+  var temaFinal = tema === 'dark' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', temaFinal);
+  localStorage.setItem('ourobras_theme', temaFinal);
+  atualizarBotaoTema();
+}
+
+function atualizarBotaoTema() {
+  var btn = document.getElementById('btnThemeToggle');
+  if (!btn) return;
+  var temaAtual = document.documentElement.getAttribute('data-theme') || 'light';
+  btn.innerHTML = temaAtual === 'dark' ? '<i class="fi fi-rr-sun"></i>' : '<i class="fi fi-rr-moon"></i>';
+  btn.title = temaAtual === 'dark' ? 'Usar modo claro' : 'Usar modo escuro';
+  btn.setAttribute('aria-label', btn.title);
+}
+
+function alternarTema() {
+  var temaAtual = document.documentElement.getAttribute('data-theme') || 'light';
+  aplicarTema(temaAtual === 'dark' ? 'light' : 'dark');
+}
+
+aplicarTema(localStorage.getItem('ourobras_theme') || 'light');
 document.addEventListener('DOMContentLoaded', iniciarEventosUI);
 
 function bindClick(id, fn) {
@@ -162,6 +215,8 @@ function bindInput(id, fn) {
 }
 
 function iniciarEventosUI() {
+  bindClick('btnThemeToggle', alternarTema);
+  atualizarBotaoTema();
   document.querySelectorAll('.tab-btn[data-tab]').forEach(function (btn) {
     btn.addEventListener('click', function () { mudarAba(btn.dataset.tab, btn); });
   });
@@ -318,23 +373,23 @@ async function ping() {
     var erpOnline = d.bancos && d.bancos.erp && d.bancos.erp.status === 'online';
     var appOnline = d.bancos && d.bancos.app && d.bancos.app.status === 'online';
     var appDesativado = d.bancos && d.bancos.app && d.bancos.app.status === 'desativado';
-    var appTexto = appDesativado ? 'App desativado' : 'App ' + (appOnline ? 'Online' : 'Offline');
+    var appOk = appOnline || appDesativado;
 
-    b.innerHTML = '<span class="status-dot"></span> ERP ' + (erpOnline ? 'Online' : 'Offline') + ' | ' + appTexto;
-    b.title = 'ERP Firebird: ' + (erpOnline ? 'online' : 'offline') + ' | Banco da aplicacao MySQL: ' + (appDesativado ? 'desativado' : (appOnline ? 'online' : 'offline'));
-
-    if (erpOnline && (appOnline || appDesativado)) {
-      b.className = 'status-badge';
-    } else {
-      b.className = 'status-badge parcial';
-    }
+    b.innerHTML =
+      '<span class="status-mini" title="ERP Firebird: ' + (erpOnline ? 'online' : 'offline') + '">' +
+      '<span class="status-dot ' + (erpOnline ? 'ok' : 'off') + '"></span><span>ERP</span></span>' +
+      '<span class="status-mini" title="Banco da aplicação MySQL: ' + (appDesativado ? 'desativado' : (appOnline ? 'online' : 'offline')) + '">' +
+      '<span class="status-dot ' + (appOk ? 'ok' : 'warn') + '"></span><span>App</span></span>';
+    b.title = 'ERP Firebird: ' + (erpOnline ? 'online' : 'offline') + ' | Banco da aplicação MySQL: ' + (appDesativado ? 'desativado' : (appOnline ? 'online' : 'offline'));
+    b.className = erpOnline && appOk ? 'status-badge' : 'status-badge parcial';
   } catch (e) {
-    b.innerHTML = '<span class="status-dot"></span> Status indisponivel';
+    b.innerHTML =
+      '<span class="status-mini"><span class="status-dot off"></span><span>ERP</span></span>' +
+      '<span class="status-mini"><span class="status-dot off"></span><span>App</span></span>';
     b.title = 'Não foi possível consultar o status dos bancos.';
     b.className = 'status-badge erro';
   }
 }
-
 /* ════════════════════════════════════════════════
    ESTOQUE — FILTROS
 ════════════════════════════════════════════════ */
@@ -678,78 +733,206 @@ function renderKpisEstoque(fabs, lojas, total, totalItens, dataRef) {
   document.getElementById('kpiItens').textContent = (totalItens || 0).toLocaleString('pt-BR');
   document.getElementById('kpiLojas').textContent = lojas.length;
   if (fabs.length) {
-    document.getElementById('kpiMaiorFab').textContent = nomeFab(fabs[0].FABRICANTE).substring(0, 22);
-    document.getElementById('kpiMaiorFabSub').textContent = fmt(fabs[0].SALDO_TOTAL, 3) + ' g';
+    setKpiTexto('kpiMaiorFab', 'kpiMaiorFabSub', nomeFabCurto(fabs[0].FABRICANTE), nomeFab(fabs[0].FABRICANTE), fmt(fabs[0].SALDO_TOTAL, 3) + ' g');
   }
   if (lojas.length) {
-    document.getElementById('kpiMaiorLoja').textContent = nomeLoja(lojas[0].NOME_LOJA, lojas[0].ESTABELECIMENTO).substring(0, 20);
-    document.getElementById('kpiMaiorLojaSub').textContent = fmt(lojas[0].SALDO_TOTAL, 3) + ' g';
+    setKpiTexto('kpiMaiorLoja', 'kpiMaiorLojaSub', nomeLojaCurto(lojas[0].NOME_LOJA, lojas[0].ESTABELECIMENTO), nomeLoja(lojas[0].NOME_LOJA, lojas[0].ESTABELECIMENTO), fmt(lojas[0].SALDO_TOTAL, 3) + ' g');
   }
 }
 
-function renderChartsEstoque(fabs, lojas) {
-  // Barras fabricante
-  if (chartFabE) chartFabE.destroy();
-  chartFabE = new Chart(document.getElementById('chartFabricante'), {
+function textoCssVar(nome, fallback) {
+  var valor = getComputedStyle(document.documentElement).getPropertyValue(nome).trim();
+  return valor || fallback;
+}
+
+function limparNomeLojaGrafico(nome) {
+  return String(nome || '')
+    .replace(/^\d+\s*[?-]\s*/g, '')
+    .replace(/^OURO DO BRASIL\s*-\s*/i, '')
+    .replace(/\s*\/\s*/g, ' / ')
+    .trim();
+}
+
+function limitarRotuloGrafico(nome, limite) {
+  var texto = String(nome || '').trim();
+  return texto.length > limite ? texto.slice(0, limite - 1) + '...' : texto;
+}
+
+function coresSaldo(valores) {
+  var cores = ['#274A98', '#F5C400', '#22C55E', '#8B5CF6', '#06B6D4'];
+  return valores.map(function (valor, i) {
+    return valor < 0 ? 'rgba(239,77,91,.82)' : cores[i % cores.length] + 'd8';
+  });
+}
+
+function renderChartLojasEstoque(lojas) {
+  if (chartLojaE) chartLojaE.destroy();
+
+  var wrap = document.getElementById('wrapLoja');
+  var canvas = document.getElementById('chartLoja');
+  var card = wrap ? wrap.closest('.chart-card') : null;
+  var alerta = document.getElementById('lojasSaldoNegativo');
+  if (!alerta && card) {
+    alerta = document.createElement('div');
+    alerta.id = 'lojasSaldoNegativo';
+    alerta.className = 'saldo-negativo-box';
+    card.appendChild(alerta);
+  }
+
+  var dados = (lojas || []).slice().sort(function (a, b) {
+    return (parseFloat(b.SALDO_TOTAL) || 0) - (parseFloat(a.SALDO_TOTAL) || 0);
+  });
+  var positivos = dados.filter(function (l) { return (parseFloat(l.SALDO_TOTAL) || 0) > 0; });
+  var negativos = dados.filter(function (l) { return (parseFloat(l.SALDO_TOTAL) || 0) < 0; });
+  var topPositivos = positivos.slice(0, 12);
+
+  if (alerta) {
+    if (negativos.length) {
+      alerta.style.display = 'flex';
+      alerta.innerHTML = '<div><strong>Ajustes/negativos fora do ranking</strong><span>' + negativos.length + ' loja(s) com saldo negativo para auditoria.</span></div>' +
+        '<div class="saldo-negativo-list">' + negativos.slice(0, 3).map(function (l) {
+          var nome = limparNomeLojaGrafico(nomeLoja(l.NOME_LOJA, l.ESTABELECIMENTO));
+          return '<span title="' + escapeHtml(nomeLoja(l.NOME_LOJA, l.ESTABELECIMENTO)) + '">' + escapeHtml(limitarRotuloGrafico(nome, 24)) + ': <b>' + fmt(l.SALDO_TOTAL, 3) + ' g</b></span>';
+        }).join('') + '</div>';
+    } else {
+      alerta.style.display = 'none';
+      alerta.innerHTML = '';
+    }
+  }
+
+  if (!topPositivos.length) {
+    if (wrap) wrap.style.height = '220px';
+    return;
+  }
+
+  var nomesCompletos = topPositivos.map(function (l) { return nomeLoja(l.NOME_LOJA, l.ESTABELECIMENTO); });
+  var labels = nomesCompletos.map(function (n) { return limitarRotuloGrafico(limparNomeLojaGrafico(n), 22); });
+  var valores = topPositivos.map(function (l) { return parseFloat(l.SALDO_TOTAL) || 0; });
+  var altura = Math.max(280, Math.min(440, topPositivos.length * 27 + 64));
+  if (wrap) wrap.style.height = altura + 'px';
+
+  chartLojaE = new Chart(canvas, {
     type: 'bar',
     data: {
-      labels: fabs.map(function (f) { var n = nomeFab(f.FABRICANTE); return n.length > 22 ? n.slice(0, 22) + '…' : n; }),
+      labels: labels,
       datasets: [{
-        label: 'Saldo', data: fabs.map(function (f) { return parseFloat(f.SALDO_TOTAL) || 0; }),
-        backgroundColor: PALETTE.map(function (c) { return c + 'cc'; }), borderColor: PALETTE, borderWidth: 2, borderRadius: 6
+        label: 'Saldo',
+        data: valores,
+        backgroundColor: coresSaldo(valores),
+        borderColor: '#274A98',
+        borderWidth: 1,
+        borderRadius: 6,
+        barThickness: 15,
+        maxBarThickness: 17
       }]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (c) { return ' ' + fmt(c.parsed.y, 3) + ' g'; } } } },
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { right: 8, left: 0 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: function (items) { return nomesCompletos[items[0].dataIndex] || ''; },
+            label: function (c) { return ' Saldo: ' + fmt(c.parsed.x, 3) + ' g'; },
+            afterBody: function () { return positivos.length > topPositivos.length ? 'Exibindo top 12 de ' + positivos.length + ' lojas positivas.' : ''; }
+          }
+        }
+      },
       scales: {
-        x: { ticks: { color: '#8A8078', font: { size: 11 } }, grid: { color: '#E8E2D8' } },
-        y: { ticks: { color: '#8A8078' }, grid: { color: '#E8E2D8' } }
+        x: { beginAtZero: true, grid: { color: 'rgba(130,144,163,.18)' }, ticks: { color: textoCssVar('--text-3', '#8290A3'), font: { size: 10 } } },
+        y: { grid: { display: false }, ticks: { color: textoCssVar('--text-2', '#526174'), font: { size: 10, weight: '700' } } }
       }
     }
   });
-  // Pizza
+}
+
+function renderChartsEstoque(fabs, lojas) {
+  if (chartFabE) chartFabE.destroy();
+
+  var fabricantes = (fabs || []).slice().sort(function (a, b) {
+    return (parseFloat(b.SALDO_TOTAL) || 0) - (parseFloat(a.SALDO_TOTAL) || 0);
+  });
+  var fabNomesCompletos = fabricantes.map(function (f) { return nomeFab(f.FABRICANTE); });
+  var fabValores = fabricantes.map(function (f) { return parseFloat(f.SALDO_TOTAL) || 0; });
+
+  chartFabE = new Chart(document.getElementById('chartFabricante'), {
+    type: 'bar',
+    data: {
+      labels: fabNomesCompletos.map(function (n) { return limitarRotuloGrafico(n, 28); }),
+      datasets: [{
+        label: 'Saldo',
+        data: fabValores,
+        backgroundColor: coresSaldo(fabValores),
+        borderColor: ['#274A98', '#F5C400', '#22C55E', '#8B5CF6'],
+        borderWidth: 1,
+        borderRadius: 7,
+        barThickness: 24,
+        maxBarThickness: 28
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { right: 10 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: function (items) { return fabNomesCompletos[items[0].dataIndex] || ''; },
+            label: function (c) { return ' Saldo: ' + fmt(c.parsed.x, 3) + ' g'; }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(130,144,163,.20)' }, ticks: { color: textoCssVar('--text-3', '#8290A3'), font: { size: 11 } } },
+        y: { grid: { display: false }, ticks: { color: textoCssVar('--text-2', '#526174'), font: { size: 11, weight: '700' } } }
+      }
+    }
+  });
+
   if (chartPizzaE) chartPizzaE.destroy();
   chartPizzaE = new Chart(document.getElementById('chartPizza'), {
     type: 'doughnut',
     data: {
-      labels: fabs.map(function (f) { return nomeFab(f.FABRICANTE).substring(0, 24); }),
+      labels: fabNomesCompletos,
       datasets: [{
-        data: fabs.map(function (f) { return parseFloat(f.SALDO_TOTAL) || 0; }),
-        backgroundColor: PALETTE.map(function (c) { return c + 'cc'; }), borderColor: PALETTE, borderWidth: 2
+        data: fabValores,
+        backgroundColor: ['#274A98d8', '#F5C400d8', '#22C55Ed8', '#8B5CF6d8'],
+        borderColor: '#FFFFFF',
+        borderWidth: 3
       }]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '64%',
       plugins: {
-        legend: { position: 'right', labels: { color: '#4A4440', font: { size: 12 }, boxWidth: 14, padding: 12 } },
+        legend: {
+          position: 'right',
+          labels: {
+            color: textoCssVar('--text-2', '#526174'),
+            font: { size: 11, weight: '600' },
+            boxWidth: 12,
+            padding: 12,
+            generateLabels: function (chart) {
+              var original = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+              return original.map(function (item) {
+                item.text = limitarRotuloGrafico(item.text, 28);
+                return item;
+              });
+            }
+          }
+        },
         tooltip: { callbacks: { label: function (c) { return ' ' + fmt(c.parsed, 3) + ' g'; } } }
       }
     }
   });
-  // Lojas
-  if (chartLojaE) chartLojaE.destroy();
-  var horiz = lojas.length > 5;
-  var alt = horiz ? Math.max(260, lojas.length * 34) : 220;
-  document.getElementById('wrapLoja').style.height = alt + 'px';
-  chartLojaE = new Chart(document.getElementById('chartLoja'), {
-    type: 'bar',
-    data: {
-      labels: lojas.map(function (l) { return nomeLoja(l.NOME_LOJA, l.ESTABELECIMENTO); }),
-      datasets: [{
-        label: 'Saldo', data: lojas.map(function (l) { return parseFloat(l.SALDO_TOTAL) || 0; }),
-        backgroundColor: PALETTE.map(function (c) { return c + 'cc'; }), borderColor: PALETTE, borderWidth: 2, borderRadius: 4
-      }]
-    },
-    options: {
-      indexAxis: horiz ? 'y' : 'x', responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (c) { var v = horiz ? c.parsed.x : c.parsed.y; return ' ' + fmt(v, 3) + ' g'; } } } },
-      scales: {
-        x: { ticks: { color: '#8A8078', font: { size: 11 } }, grid: { color: '#E8E2D8' } },
-        y: { ticks: { color: '#4A4440', font: { size: horiz ? 11 : 10 } }, grid: { color: '#E8E2D8' } }
-      }
-    }
-  });
+
+  renderChartLojasEstoque(lojas || []);
 }
 
 /* ── Ranking ─────────────────────────────────── */
@@ -765,7 +948,7 @@ async function carregarRanking(p) {
       var bw = ((parseFloat(r.SALDO_TOTAL) || 0) / maxVal * 100).toFixed(0);
       return '<tr>' +
         '<td><strong>' + (i + 1) + '</strong></td>' +
-        '<td>' + nomeFab(r.FABRICANTE).substring(0, 28) + '</td>' +
+        '<td class="fabricante-cell" title="' + escapeHtml(nomeFab(r.FABRICANTE)) + '">' + escapeHtml(nomeFab(r.FABRICANTE)) + '</td>' +
         '<td style="text-align:right">' + r.QTD_PRODUTOS + '</td>' +
         '<td style="text-align:right">' + r.QTD_LOJAS + '</td>' +
         '<td style="text-align:right" class="money">' + fmt(r.SALDO_TOTAL, 3) + ' g</td>' +
@@ -805,15 +988,19 @@ async function carregarTudo() {
 function renderRankingLocal(ranking) {
   var el = document.getElementById('rankingFab');
   if (!ranking.length) { el.innerHTML = '<div class="empty">Sem dados.</div>'; return; }
-  var total = ranking.reduce(function (s, r) { return s + (parseFloat(r.SALDO_TOTAL) || 0); }, 0);
+  var total = ranking.reduce(function (s, r) { return s + (parseFloat(r.SALDO_TOTAL) || 0); }, 0) || 1;
   var maxVal = parseFloat(ranking[0].SALDO_TOTAL) || 1;
   var rows = ranking.slice(0, 10).map(function (r, i) {
     var pct = ((parseFloat(r.SALDO_TOTAL) || 0) / total * 100).toFixed(1);
     var bw = ((parseFloat(r.SALDO_TOTAL) || 0) / maxVal * 100).toFixed(0);
-    return '<tr><td><strong>' + (i + 1) + '</strong></td><td>' + nomeFab(r.FABRICANTE).substring(0, 28) + '</td>' +
-      '<td style="text-align:right">' + r.QTD_PRODUTOS + '</td><td style="text-align:right">' + r.QTD_LOJAS + '</td>' +
+    return '<tr>' +
+      '<td><strong>' + (i + 1) + '</strong></td>' +
+      '<td class="fabricante-cell" title="' + escapeHtml(nomeFab(r.FABRICANTE)) + '">' + escapeHtml(nomeFab(r.FABRICANTE)) + '</td>' +
+      '<td style="text-align:right">' + r.QTD_PRODUTOS + '</td>' +
+      '<td style="text-align:right">' + r.QTD_LOJAS + '</td>' +
       '<td style="text-align:right" class="money">' + fmt(r.SALDO_TOTAL, 3) + ' g</td>' +
-      '<td><div class="prog-wrap"><div class="prog-bg"><div class="prog-fill" style="width:' + bw + '%"></div></div><span style="font-size:.72rem;color:#8A8078">' + pct + '%</span></div></td></tr>';
+      '<td><div class="prog-wrap"><div class="prog-bg"><div class="prog-fill" style="width:' + bw + '%"></div></div><span style="font-size:.72rem;color:#8A8078">' + pct + '%</span></div></td>' +
+      '</tr>';
   }).join('');
   el.innerHTML = '<table class="dt"><thead><tr><th></th><th>Fabricante</th><th style="text-align:right">Produtos</th><th style="text-align:right">Lojas</th><th style="text-align:right">Saldo (g)</th><th>Part.%</th></tr></thead><tbody>' + rows + '</tbody></table>';
 }
@@ -836,29 +1023,9 @@ async function carregarResumoLoja(p) {
     var lojas = d.lojas || [];
     document.getElementById('kpiLojas').textContent = lojas.length;
     if (lojas.length) {
-      document.getElementById('kpiMaiorLoja').textContent = nomeLoja(lojas[0].NOME_LOJA, lojas[0].ESTABELECIMENTO).substring(0, 20);
-      document.getElementById('kpiMaiorLojaSub').textContent = fmt(lojas[0].SALDO_TOTAL, 3) + ' g';
+      setKpiTexto('kpiMaiorLoja', 'kpiMaiorLojaSub', nomeLojaCurto(lojas[0].NOME_LOJA, lojas[0].ESTABELECIMENTO), nomeLoja(lojas[0].NOME_LOJA, lojas[0].ESTABELECIMENTO), fmt(lojas[0].SALDO_TOTAL, 3) + ' g');
     }
-    // Atualiza gráfico de lojas
-    if (chartLojaE) chartLojaE.destroy();
-    var horiz = lojas.length > 5;
-    var alt = horiz ? Math.max(260, lojas.length * 34) : 220;
-    document.getElementById('wrapLoja').style.height = alt + 'px';
-    chartLojaE = new Chart(document.getElementById('chartLoja'), {
-      type: 'bar',
-      data: {
-        labels: lojas.map(function (l) { return nomeLoja(l.NOME_LOJA, l.ESTABELECIMENTO); }),
-        datasets: [{
-          label: 'Saldo', data: lojas.map(function (l) { return parseFloat(l.SALDO_TOTAL) || 0; }),
-          backgroundColor: PALETTE.map(function (c) { return c + 'cc'; }), borderColor: PALETTE, borderWidth: 2, borderRadius: 4
-        }]
-      },
-      options: {
-        indexAxis: horiz ? 'y' : 'x', responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (c) { var v = horiz ? c.parsed.x : c.parsed.y; return ' ' + fmt(v, 3) + ' g'; } } } },
-        scales: { x: { ticks: { color: '#8A8078', font: { size: 11 } }, grid: { color: '#E8E2D8' } }, y: { ticks: { color: '#4A4440', font: { size: horiz ? 11 : 10 } }, grid: { color: '#E8E2D8' } } }
-      }
-    });
+    renderChartLojasEstoque(lojas);
   } catch (e) { console.error(e); }
 }
 
@@ -1065,8 +1232,8 @@ async function buscarVendas() {
   btn.disabled = true; btn.textContent = '⏳ Carregando...';
   var params = new URLSearchParams({ data_inicio: di, data_fim: df });
   if (fab) params.set('fabricante', fab);
-  if (vCoordAtivo) params.set('coordenador', vCoordAtivo);
-  else if (lj) params.set('interno_est', lj);
+  if (lj) params.set('interno_est', lj);
+  else if (vCoordAtivo) params.set('coordenador', vCoordAtivo);
   try {
     var r = await apiFetch('/api/vendas?' + params);
     var data = await r.json();
@@ -1082,6 +1249,7 @@ function renderVendas(data) {
   var porFab = data.por_fabricante || [];
   var porLoja = data.por_loja || [];
   var totalItens = data.total_itens || 0;
+  var totalNotas = data.total_notas || totalItens;
   var totalQtd = vendas.reduce(function (s, r) { return s + (parseFloat(r.QUANTIDADE) || 0); }, 0);
   var vc = document.getElementById('vendasContent');
   vc.innerHTML = '';
@@ -1090,10 +1258,10 @@ function renderVendas(data) {
   var kGrid = document.createElement('div');
   kGrid.className = 'kpi-grid-4';
   kGrid.innerHTML =
-    vKpi('Total de Notas', totalItens.toLocaleString('pt-BR'), 'Lançamentos no Período') +
+    vKpi('Total de Notas', totalNotas.toLocaleString('pt-BR'), 'Notas no Período') +
     vKpi('Itens Vendidos', totalQtd.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }), 'Quantidade Total') +
     vKpi('Lojas com Venda', porLoja.length, 'Estabelecimentos Ativos') +
-    vKpi('Top Produto', topProd.length ? topProd[0].produto.split(' ').slice(0, 3).join(' ') + '…' : '—', topProd.length ? topProd[0].quantidade.toFixed(0) + ' un.' : '');
+    vKpi('Top Produto', topProd.length ? topProd[0].produto : '-', topProd.length ? topProd[0].quantidade.toFixed(0) + ' un.' : '', 'featured');
   vc.appendChild(kGrid);
 
   // Charts row
@@ -1102,7 +1270,7 @@ function renderVendas(data) {
 
   var cFab = document.createElement('div');
   cFab.className = 'v-chart-card';
-  cFab.innerHTML = '<div class="v-chart-title"><i class="fi fi-rr-chat-arrow-grow"></i></div> Por Fabricante</div><div class="v-chart-wrap"><canvas id="vChartFab"></canvas></div>';
+  cFab.innerHTML = '<div class="v-chart-title"><i class="fi fi-rr-chat-arrow-grow"></i><span>Por Fabricante</span></div><div class="v-chart-wrap"><canvas id="vChartFab"></canvas></div>';
   cg.appendChild(cFab);
 
   var cLoja = document.createElement('div');
@@ -1121,7 +1289,7 @@ function renderVendas(data) {
     rankHtml += '<div class="rank-item">' +
       '<div class="rank-num' + (i < 3 ? ' gold' : '') + '">' + (i + 1) + '</div>' +
       '<div class="rank-bar-wrap">' +
-      '<div class="rank-name">' + p.produto.substring(0, 50) + ' ' + badgeFab(p.fabricante) + '</div>' +
+      '<div class="rank-name" title="' + escapeHtml(p.produto || '') + '"><span class="rank-product-text">' + escapeHtml(p.produto || '-') + '</span> ' + badgeFab(p.fabricante) + '</div>' +
       '<div class="rank-bar-bg"><div class="rank-bar-fill" style="width:' + pct + '%"></div></div>' +
       '</div>' +
       '<div class="rank-qty">' + p.quantidade.toFixed(0) + '</div>' +
@@ -1140,7 +1308,7 @@ function renderVendas(data) {
     '<input class="v-search" id="filtroTabelaVendas" placeholder=" Filtrar tabela…"/>' +
     '</div>' +
     '<div class="v-table-wrap">' +
-    '<table class="vt"><thead><tr><th>Nota</th><th>Data</th><th>Loja</th><th>Fabricante</th><th>Produto</th><th style="text-align:right">Qtd</th><th>Modelo</th></tr></thead>' +
+    '<table class="vt"><thead><tr><th>Nota</th><th>Data</th><th>Loja</th><th>Fabricante</th><th>Produto</th><th style="text-align:right">Qtd</th><th>Status</th></tr></thead>' +
     '<tbody id="tbodyV"></tbody></table></div>';
   vc.appendChild(tCard);
 
@@ -1152,9 +1320,9 @@ function renderVendas(data) {
       '<td>' + fmtData(r.DATA_EMISSAO) + '</td>' +
       '<td title="' + r.ESTABELECIMENTO + '">' + ((r.ESTABELECIMENTO || '').split(' - ').pop()) + '</td>' +
       '<td>' + badgeFab(r.FABRICANTE) + '</td>' +
-      '<td title="' + r.PRODUTO + '">' + (r.PRODUTO || '').substring(0, 42) + (r.PRODUTO && r.PRODUTO.length > 42 ? '…' : '') + '</td>' +
+      '<td class="v-produto-cell" title="' + escapeHtml(r.PRODUTO || '') + '">' + escapeHtml(r.PRODUTO || '-') + '</td>' +
       '<td style="text-align:right;font-weight:700;color:var(--gold)">' + parseFloat(r.QUANTIDADE || 0).toFixed(2) + '</td>' +
-      '<td style="color:var(--text-3)">' + (r.MODELO || '—') + '</td>';
+      '<td style="color:var(--text-3)">' + escapeHtml(r.STATUS || '—') + '</td>';
     tbody.appendChild(tr);
   });
 
@@ -1167,7 +1335,7 @@ function renderVendas(data) {
         labels: porFab.map(function (f) { return abrevFab(f.fabricante); }),
         datasets: [{
           data: porFab.map(function (f) { return f.quantidade; }),
-          backgroundColor: ['#1A3A6B', '#A8762A', '#166534', '#7c3aed'],
+          backgroundColor: ['#274A98', '#F5C400', '#22C55E', '#8B5CF6'],
           borderColor: '#FFFFFF', borderWidth: 3
         }]
       },
@@ -1187,7 +1355,7 @@ function renderVendas(data) {
         labels: topL.map(function (l) { return l.nome_loja.split(' - ').pop(); }),
         datasets: [{
           label: 'Qtd', data: topL.map(function (l) { return l.quantidade; }),
-          backgroundColor: 'rgba(168,118,42,.75)', borderColor: '#A8762A', borderWidth: 1, borderRadius: 5
+          backgroundColor: 'rgba(245,196,0,.78)', borderColor: '#D6A900', borderWidth: 1, borderRadius: 6
         }]
       },
       options: {
@@ -1202,8 +1370,11 @@ function renderVendas(data) {
   }, 50);
 }
 
-function vKpi(label, value, sub) {
-  return '<div class="v-kpi"><div class="v-kpi-label">' + label + '</div><div class="v-kpi-valor">' + value + '</div><div class="v-kpi-sub">' + sub + '</div></div>';
+function vKpi(label, value, sub, variant) {
+  var classe = 'v-kpi' + (variant ? ' v-kpi-' + variant : '');
+  var valor = escapeHtml(value);
+  var titulo = variant === 'featured' ? ' title="' + valor + '"' : '';
+  return '<div class="' + classe + '"><div class="v-kpi-label">' + escapeHtml(label) + '</div><div class="v-kpi-valor"' + titulo + '>' + valor + '</div><div class="v-kpi-sub">' + escapeHtml(sub) + '</div></div>';
 }
 
 function filtrarTabelaV(q) {

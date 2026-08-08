@@ -1,55 +1,159 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ourobras — Acesso</title>
-  <style>
+  <title>Consultas Ourobras — Acesso</title>
+    <style>
+    :root {
+      color-scheme: light;
+      --bg-start: #F4F7FB;
+      --bg-end: #EEF3FA;
+      --surface: #FFFFFF;
+      --surface2: #F8FAFD;
+      --border: #E6ECF5;
+      --border-focus: #F5C400;
+      --gold: #F5C400;
+      --gold-strong: #D6A900;
+      --accent: #35569F;
+      --accent-dark: #2F4F96;
+      --text-1: #243044;
+      --text-2: #526174;
+      --text-3: #8290A3;
+      --danger: #EF4D5B;
+      --danger-bg: #FFF0F2;
+      --shadow: 0 18px 48px rgba(27, 40, 68, .14);
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: #F5F2EC;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      color: var(--text-1);
+      -webkit-font-smoothing: antialiased;
     }
+
     .card {
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 4px 24px rgba(0,0,0,.08);
-      padding: 48px 40px 40px;
-      width: 100%;
-      max-width: 380px;
+      width: min(100% - 32px, 390px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 46px 40px 38px;
     }
-    .logo { text-align: center; margin-bottom: 32px; }
-    .logo img { height: 48px; }
-    h1 { font-size: 1.1rem; font-weight: 600; color: #1A1612; text-align: center; margin-bottom: 4px; }
-    .sub { font-size: .85rem; color: #8A8078; text-align: center; margin-bottom: 28px; }
-    label { display: block; font-size: .8rem; font-weight: 500; color: #4A4440; margin-bottom: 5px; }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+
+    .logo img {
+      height: 50px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    h1 {
+      font-size: 1.14rem;
+      font-weight: 800;
+      color: var(--text-1);
+      text-align: center;
+      margin-bottom: 7px;
+      letter-spacing: 0;
+    }
+
+    .sub {
+      font-size: .86rem;
+      color: var(--text-2);
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-size: .76rem;
+      font-weight: 800;
+      color: var(--text-2);
+      margin-bottom: 7px;
+    }
+
     input {
-      width: 100%; padding: 10px 14px;
-      border: 1.5px solid #DDD8D0; border-radius: 8px;
-      font-size: .9rem; color: #1A1612;
-      outline: none; transition: border-color .15s;
-      margin-bottom: 16px;
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface2);
+      font-size: .92rem;
+      color: var(--text-1);
+      outline: none;
+      transition: border-color .15s, box-shadow .15s, background .15s;
+      margin-bottom: 17px;
     }
-    input:focus { border-color: #A8762A; }
+
+    input::placeholder {
+      color: var(--text-3);
+    }
+
+    input:focus {
+      background: var(--surface);
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(245, 196, 0, .18);
+    }
+
     .btn {
-      width: 100%; padding: 12px;
-      background: #A8762A; color: #fff;
-      border: none; border-radius: 8px;
-      font-size: .95rem; font-weight: 600;
-      cursor: pointer; transition: background .15s;
-      margin-top: 4px;
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+      color: #FFFFFF;
+      border: none;
+      border-radius: 8px;
+      font-size: .95rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s, filter .15s;
+      margin-top: 5px;
+      box-shadow: 0 8px 18px rgba(53, 86, 159, .22);
     }
-    .btn:hover { background: #8A6020; }
-    .btn:disabled { background: #C8B898; cursor: not-allowed; }
+
+    .btn:hover {
+      filter: brightness(1.04);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(53, 86, 159, .28);
+    }
+
+    .btn:disabled {
+      background: #AAB5C4;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     .erro {
-      background: #FEF2F2; color: #991B1B;
-      border-radius: 8px; padding: 10px 14px;
-      font-size: .83rem; margin-bottom: 16px;
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid rgba(239, 77, 91, .24);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: .83rem;
+      margin-bottom: 16px;
       display: none;
+    }
+
+    @media (max-width: 520px) {
+      body {
+        align-items: flex-start;
+        padding-top: 72px;
+      }
+
+      .card {
+        padding: 38px 26px 30px;
+      }
     }
   </style>
 </head>
