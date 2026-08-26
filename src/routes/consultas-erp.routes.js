@@ -138,7 +138,9 @@ router.get('/consultas/movimentacoes-v3', async function (req, res) {
       ' P.CODIGO AS CODIGO_PRODUTO,' +
       ' TRIM(P.NOME) AS PRODUTO,' +
       ' L.ITEM AS ITEM_NUMERO,' +
-      ' L.QUANTIDADE AS QUANTIDADE,' +
+      (tipo === 'contrato_120'
+        ? ' CDN.TRANSP_PESO_LIQUIDO AS QUANTIDADE,'
+        : ' L.QUANTIDADE AS QUANTIDADE,') +
       ' COALESCE(L.VALOR, 0) AS ITEM_VALOR_UNITARIO,' +
       ' COALESCE(L.VALOR_TOTAL, 0) AS ITEM_VALOR_TOTAL,' +
       ' CDN.DATA_PEDIDO AS DATA_PEDIDO,' +
