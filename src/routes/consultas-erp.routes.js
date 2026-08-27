@@ -138,8 +138,11 @@ router.get('/consultas/movimentacoes-v3', async function (req, res) {
       ' P.CODIGO AS CODIGO_PRODUTO,' +
       ' TRIM(P.NOME) AS PRODUTO,' +
       ' L.ITEM AS ITEM_NUMERO,' +
-      (tipo === 'contrato_120'
-        ? ' CDN.TRANSP_PESO_LIQUIDO AS QUANTIDADE,'
+      (['contrato_120', 'contrato_003', 'contrato_upgrade'].includes(tipo)
+        ? ' CASE' +
+          '   WHEN COALESCE(PEG.INTERNO_GRADE, 0) = 0 THEN L.QUANTIDADE' +
+          '   ELSE PEG.PESO_LIQUIDO' +
+          ' END AS QUANTIDADE,'
         : ' L.QUANTIDADE AS QUANTIDADE,') +
       ' COALESCE(L.VALOR, 0) AS ITEM_VALOR_UNITARIO,' +
       ' COALESCE(L.VALOR_TOTAL, 0) AS ITEM_VALOR_TOTAL,' +
@@ -160,6 +163,7 @@ router.get('/consultas/movimentacoes-v3', async function (req, res) {
       ' LEFT JOIN CLIENTE_FORNECEDOR CF ON CF.INTERNO = CDN.INTERNO_CLIENTE' +
       ' LEFT JOIN LANCAMENTO L ON L.INTERNO_CABECALHO = CDN.INTERNO' +
       ' LEFT JOIN PRODUTO_ESTABELECIMENTO PE ON PE.INTERNO = L.INTERNO_PRODUTO_EST' +
+      ' LEFT JOIN PRODUTO_EST_GRADE PEG ON PEG.INTERNO = L.INTERNO_PRODUTO_EST_GRADE' +
       ' LEFT JOIN PRODUTO P ON P.INTERNO = PE.INTERNO_PRODUTO' +
       " WHERE CDN.DATA_ESTOQUE BETWEEN CAST(? AS DATE) AND CAST(? AS DATE)" +
       ' AND CDN.INTERNO_EST = ?' +
