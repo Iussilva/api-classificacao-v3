@@ -42,7 +42,7 @@ module.exports = {
   adminPermissions: parseList(process.env.ADMIN_PERMISSIONS, DEFAULT_ADMIN_PERMISSIONS),
   allowedOrigins: [
     process.env.ALLOWED_ORIGIN,
-    'https://classificacao.suporteourobras.com'
+    'https://consultas.suporteourobras.com'
   ].filter(Boolean),
   cacheTtlMs: parseInt(process.env.CACHE_TTL_MS, 10) || 5 * 60 * 1000,
   appDb: {
@@ -55,23 +55,35 @@ module.exports = {
     connectionLimit: parseInt(process.env.APP_DB_CONNECTION_LIMIT, 10) || 5
   },
   firebird: {
-    matriz: {
-      host: process.env.FB_HOST || 'ourobras_barra.qualyti.inf.br',
-      port: parseInt(process.env.FB_PORT, 10) || 3050,
-      database: process.env.FB_DATABASE || 'D:\\Conttroller\\Dados\\GERAIS.FDB',
-      user: process.env.FB_USER || 'SYSDBA',
-      password: process.env.FB_PASSWORD || 'masterkey',
-      charset: process.env.FB_CHARSET || 'ISO8859_1',
-      lowercase_keys: false
-    },
-    manaus: {
-      host: process.env.FB_MANAUS_HOST,
-      port: parseInt(process.env.FB_MANAUS_PORT, 10) || 3050,
-      database: process.env.FB_MANAUS_DATABASE,
-      user: process.env.FB_MANAUS_USER || process.env.FB_USER || 'SYSDBA',
-      password: process.env.FB_MANAUS_PASSWORD || process.env.FB_PASSWORD,
-      charset: process.env.FB_MANAUS_CHARSET || process.env.FB_CHARSET || 'ISO8859_1',
-      lowercase_keys: false
-    }
+  matriz: {
+    host: process.env.FB_HOST || 'ourobras_barra.qualyti.inf.br',
+    port: parseInt(process.env.FB_PORT, 10) || 3050,
+    database: process.env.FB_DATABASE || 'D:\\Conttroller\\Dados\\GERAIS.FDB',
+    user: process.env.FB_USER || 'SYSDBA',
+    password: process.env.FB_PASSWORD || 'masterkey',
+    charset: process.env.FB_CHARSET || 'ISO8859_1',
+    lowercase_keys: false
+  },
+
+  manaus: {
+    host: process.env.FB_MANAUS_HOST,
+    port: parseInt(process.env.FB_MANAUS_PORT, 10) || 3050,
+    database: process.env.FB_MANAUS_DATABASE,
+    user: process.env.FB_MANAUS_USER || process.env.FB_USER || 'SYSDBA',
+    password: process.env.FB_MANAUS_PASSWORD || process.env.FB_PASSWORD,
+    charset: process.env.FB_MANAUS_CHARSET || process.env.FB_CHARSET || 'ISO8859_1',
+    lowercase_keys: false
+  },
+
+  ouromarket: {
+    host: process.env.FB_OUROMARKET_HOST,
+    port: parseInt(process.env.FB_OUROMARKET_PORT, 10) || 3050,
+    database: process.env.FB_OUROMARKET_DATABASE,
+    user: process.env.FB_OUROMARKET_USER || process.env.FB_USER || 'SYSDBA',
+    password: process.env.FB_OUROMARKET_PASSWORD || process.env.FB_PASSWORD,
+    charset: process.env.FB_OUROMARKET_CHARSET || process.env.FB_CHARSET || 'ISO8859_1',
+    lowercase_keys: false
+  
   }
+}
 };
