@@ -3,20 +3,32 @@ const env = require('../config/env');
 
 const ORIGENS_BANCO = {
   matriz: env.firebird.matriz,
-  manaus: env.firebird.manaus
+  manaus: env.firebird.manaus,
+  ouromarket: env.firebird.ouromarket
 };
 
 function normalizarOrigem(origem) {
   origem = String(origem || 'matriz').toLowerCase().trim();
-  return ORIGENS_BANCO[origem] ? origem : 'matriz';
+
+  return ORIGENS_BANCO[origem]
+    ? origem
+    : 'matriz';
 }
 
 function getFbOptions(origem) {
   origem = normalizarOrigem(origem);
+
   var options = ORIGENS_BANCO[origem];
 
-  if (!options.host || !options.database || !options.user || !options.password) {
-    throw new Error('Configuracao Firebird incompleta para origem: ' + origem);
+  if (
+    !options.host ||
+    !options.database ||
+    !options.user ||
+    !options.password
+  ) {
+    throw new Error(
+      'Configuracao Firebird incompleta para origem: ' + origem
+    );
   }
 
   return options;
@@ -24,6 +36,7 @@ function getFbOptions(origem) {
 
 function query(sql, params, origem) {
   params = params || [];
+
   var options;
 
   try {
@@ -34,10 +47,17 @@ function query(sql, params, origem) {
 
   return new Promise(function (resolve, reject) {
     Firebird.attach(options, function (err, db) {
-      if (err) return reject(err);
+      if (err) {
+        return reject(err);
+      }
+
       db.query(sql, params, function (err, result) {
         db.detach();
-        if (err) return reject(err);
+
+        if (err) {
+          return reject(err);
+        }
+
         resolve(result);
       });
     });
@@ -47,6 +67,7 @@ function query(sql, params, origem) {
 module.exports = {
   fbOptions: env.firebird.matriz,
   fbOptionsManaus: env.firebird.manaus,
+  fbOptionsOuromarket: env.firebird.ouromarket,
   normalizarOrigem: normalizarOrigem,
   getFbOptions: getFbOptions,
   query: query
