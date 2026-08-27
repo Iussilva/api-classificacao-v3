@@ -57,6 +57,9 @@ var TIPOS_CONSULTA_ERP = {
   }
 };
 
+// Ouromarket utiliza a mesma tabela de modalidades/status da Matriz.
+TIPOS_CONSULTA_ERP.ouromarket = TIPOS_CONSULTA_ERP.matriz;
+
 router.get('/consultas/movimentacoes-v3', async function (req, res) {
   try {
     var tipo = String(req.query.tipo || '').trim();
